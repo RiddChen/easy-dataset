@@ -24,6 +24,30 @@ If you like this project, please give it a Star⭐️, or buy the author a coffe
 
 </div>
 
+## Fork Notes
+
+This repository is based on [ConardLi/easy-dataset](https://github.com/ConardLi/easy-dataset) and is maintained as a customized fork for multimodal image multi-turn dataset construction.
+
+## Custom Changes In This Fork
+
+This fork adds and adjusts features mainly around image multi-turn workflow:
+
+- 2-turn multimodal image conversation generation
+- Batch generation task for image multi-turn conversations
+- Task settings integration for image multi-turn workflow
+- Review, confirmation, deletion, and export for image multi-turn datasets
+- ShareGPT JSON, JSONL, and split ZIP export support
+- Large image preview with bbox visualization on detail pages
+- Improved normalized `bbox=[x,y,w,h]` parsing and rendering
+- Label rendering for outputs like `privacy item1: face | bbox=[...]` as `#1: face`
+- Cross-page image selection fix in image management
+
+## Change Log
+
+Detailed change summary for this customized fork:
+
+- [IMAGE_MULTI_TURN_CHANGELOG.md](./IMAGE_MULTI_TURN_CHANGELOG.md)
+
 ## Overview
 
 Easy Dataset is an application specifically designed for building large language model (LLM) datasets. It features an intuitive interface, along with built-in powerful document parsing tools, intelligent segmentation algorithms, data cleaning and augmentation capabilities. The application can convert domain-specific documents in various formats into high-quality structured datasets, which are applicable to scenarios such as model fine-tuning, retrieval-augmented generation (RAG), and model performance evaluation.
