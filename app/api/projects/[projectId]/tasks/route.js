@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { getProjectRoot } from '@/lib/db/base';
@@ -35,21 +35,17 @@ function normalizeTaskModelInfo(modelInfo) {
   return parsedModelInfo;
 }
 
-// 获取任务配置
 export async function GET(request, { params }) {
   try {
     const { projectId } = params;
 
-    // 验证项目 ID
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    // 获取项目根目录
     const projectRoot = await getProjectRoot();
     const projectPath = path.join(projectRoot, projectId);
 
-    // 检查项目是否存在
     try {
       await fs.access(projectPath);
     } catch (error) {
@@ -64,39 +60,30 @@ export async function GET(request, { params }) {
   }
 }
 
-// 更新任务配置
 export async function PUT(request, { params }) {
   try {
     const { projectId } = params;
 
-    // 验证项目 ID
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    // 获取请求体
     const taskConfig = await request.json();
 
-    // 验证请求体
     if (!taskConfig) {
       return NextResponse.json({ error: 'Task configuration cannot be empty' }, { status: 400 });
     }
 
-    // 获取项目根目录
     const projectRoot = await getProjectRoot();
     const projectPath = path.join(projectRoot, projectId);
 
-    // 检查项目是否存在
     try {
       await fs.access(projectPath);
     } catch (error) {
       return NextResponse.json({ error: 'Project does not exist' }, { status: 404 });
     }
 
-    // 获取任务配置文件路径
     const taskConfigPath = path.join(projectPath, 'task-config.json');
-
-    // 写入任务配置文件
     await fs.writeFile(taskConfigPath, JSON.stringify(taskConfig, null, 2), 'utf-8');
 
     return NextResponse.json({ message: 'Task configuration updated successfully' });
@@ -106,13 +93,11 @@ export async function PUT(request, { params }) {
   }
 }
 
-// 创建新任务
 export async function POST(request, { params }) {
   try {
     const { projectId } = params;
     const data = await request.json();
 
-    // 验证必填字段
     const { taskType, modelInfo, language, detail = '', totalCount = 0, note } = data;
 
     if (!taskType) {
@@ -125,12 +110,11 @@ export async function POST(request, { params }) {
       );
     }
 
-    // 创建新任务
     const newTask = await db.task.create({
       data: {
         projectId,
         taskType,
-        status: 0, // 初始状态: 处理中
+        status: 0,
         modelInfo: JSON.stringify(normalizeTaskModelInfo(modelInfo)),
         language: language || 'zh-CN',
         detail: detail || '',
@@ -140,7 +124,6 @@ export async function POST(request, { params }) {
       }
     });
 
-    // 异步启动任务处理
     processTask(newTask.id).catch(err => {
       console.error(`Task startup failed: ${newTask.id}`, String(err));
     });
@@ -162,3 +145,4 @@ export async function POST(request, { params }) {
     );
   }
 }
+

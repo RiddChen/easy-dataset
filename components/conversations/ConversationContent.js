@@ -3,6 +3,31 @@
 import { Box, Typography, Card, CardContent, Chip, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
+function getMessageText(content) {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .filter(item => item?.type === 'text')
+      .map(item => item.text)
+      .join('\n');
+  }
+
+  return '';
+}
+
+function getMessageImages(content) {
+  if (!Array.isArray(content)) {
+    return [];
+  }
+
+  return content
+    .filter(item => item?.type === 'image_url' && item?.image_url?.url)
+    .map(item => item.image_url.url);
+}
+
 /**
  * 多轮对话内容展示和编辑组件
  */
@@ -50,7 +75,7 @@ export default function ConversationContent({ messages, editMode, onMessageChang
                       multiline
                       minRows={3}
                       maxRows={10}
-                      value={message.content}
+                      value={getMessageText(message.content)}
                       onChange={e => onMessageChange && onMessageChange(index, e.target.value)}
                       variant="outlined"
                       size="small"
@@ -63,19 +88,38 @@ export default function ConversationContent({ messages, editMode, onMessageChang
                       }}
                     />
                   ) : (
-                    <Typography
-                      variant="body2"
-                      component="pre"
-                      sx={{
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                        fontFamily: 'inherit',
-                        lineHeight: 1.6,
-                        margin: 0
-                      }}
-                    >
-                      {message.content}
-                    </Typography>
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        component="pre"
+                        sx={{
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                          fontFamily: 'inherit',
+                          lineHeight: 1.6,
+                          margin: 0
+                        }}
+                      >
+                        {getMessageText(message.content)}
+                      </Typography>
+                      {getMessageImages(message.content).map(imageUrl => (
+                        <Box
+                          key={imageUrl}
+                          component="img"
+                          src={imageUrl}
+                          alt="conversation attachment"
+                          sx={{
+                            display: 'block',
+                            mt: 2,
+                            maxWidth: '100%',
+                            maxHeight: 220,
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: 'divider'
+                          }}
+                        />
+                      ))}
+                    </Box>
                   )}
                 </CardContent>
               </Card>

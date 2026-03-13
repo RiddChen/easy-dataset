@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import DatasetIcon from '@mui/icons-material/Dataset';
+import ForumIcon from '@mui/icons-material/Forum';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
@@ -33,6 +34,7 @@ export default function ImageGrid({
   onPageChange,
   onGenerateQuestions,
   onGenerateDataset,
+  onGenerateMultiTurn,
   onDelete,
   onAnnotate
 }) {
@@ -49,7 +51,7 @@ export default function ImageGrid({
           {t('images.noImages', { defaultValue: '还没有图片' })}
         </Typography>
         <Typography variant="body2" sx={imageStyles.emptyDescription}>
-          {t('images.noImagesDescription', { defaultValue: '开始导入图片，创建您的第一个图片数据集' })}
+          {t('images.noImagesDescription', { defaultValue: '开始导入图片，创建你的第一个图片数据集' })}
         </Typography>
       </Box>
     );
@@ -61,7 +63,6 @@ export default function ImageGrid({
         {images.map(image => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
             <Card sx={imageStyles.imageCard}>
-              {/* 图片区域 */}
               <Box sx={imageStyles.imageWrapper}>
                 <CardMedia
                   component="img"
@@ -71,10 +72,8 @@ export default function ImageGrid({
                   onClick={() => setPreviewImage(image)}
                 />
 
-                {/* 悬停遮罩 */}
                 <Box sx={imageStyles.imageOverlay} />
 
-                {/* 状态标签 - 悬浮在图片右上角 */}
                 <Box sx={imageStyles.statusChipsContainer}>
                   <Chip
                     label={`${image.questionCount || 0} ${t('images.questions', { defaultValue: '问题' })}`}
@@ -90,7 +89,6 @@ export default function ImageGrid({
                   />
                 </Box>
 
-                {/* 文件名标签 - 悬浮在图片底部 */}
                 <Box sx={imageStyles.imageNameContainer}>
                   <Tooltip title={image.imageName}>
                     <Chip label={image.imageName} size="small" sx={imageStyles.imageNameChip} />
@@ -98,7 +96,8 @@ export default function ImageGrid({
                 </Box>
               </Box>
 
-              {/* 操作按钮区域 */}
+              <CardContent sx={{ display: 'none' }} />
+
               <CardActions sx={imageStyles.cardActions}>
                 <Button
                   size="small"
@@ -118,6 +117,11 @@ export default function ImageGrid({
                 <Tooltip title={t('images.generateDataset', { defaultValue: '生成数据集' })}>
                   <IconButton size="small" onClick={() => onGenerateDataset(image)} sx={imageStyles.actionIconButton}>
                     <DatasetIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="生成 2 轮对话">
+                  <IconButton size="small" onClick={() => onGenerateMultiTurn(image)} sx={imageStyles.actionIconButton}>
+                    <ForumIcon />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title={t('common.delete', { defaultValue: '删除' })}>
@@ -150,7 +154,6 @@ export default function ImageGrid({
         </Box>
       )}
 
-      {/* 图片预览对话框 */}
       <Dialog
         open={!!previewImage}
         onClose={() => setPreviewImage(null)}

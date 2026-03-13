@@ -1,4 +1,4 @@
-// 默认项目任务配置
+// Default project task settings
 export const DEFAULT_SETTINGS = {
   textSplitMinLength: 2500,
   textSplitMaxLength: 4000,
@@ -7,13 +7,14 @@ export const DEFAULT_SETTINGS = {
   huggingfaceToken: '',
   concurrencyLimit: 5,
   visionConcurrencyLimit: 5,
-  // 多轮对话数据集默认配置
   multiTurnSystemPrompt: '',
   multiTurnScenario: '',
-  multiTurnRounds: 3,
+  multiTurnRounds: 2,
   multiTurnRoleA: '',
   multiTurnRoleB: '',
-  // 测试集生成配置
+  imageMultiTurnFirstQuestion: '',
+  imageMultiTurnFollowUpQuestion: '',
+  imageMultiTurnAutoFollowUp: true,
   evalQuestionTypeRatios: {
     true_false: 1,
     single_choice: 1,

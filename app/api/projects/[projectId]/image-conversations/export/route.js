@@ -1,26 +1,24 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { getAllDatasetConversations } from '@/lib/db/dataset-conversations';
 
 export async function GET(request, { params }) {
   try {
     const { projectId } = params;
     const { searchParams } = new URL(request.url);
+    const includeSystem = searchParams.get('includeSystem') !== 'false';
     const filters = {
-      confirmed: searchParams.get('confirmed')
+      confirmed: searchParams.get('confirmed'),
+      sourceType: 'image'
     };
 
     Object.keys(filters).forEach(key => {
-      if (!filters[key]) {
+      if (!filters[key] && filters[key] !== false) {
         delete filters[key];
       }
     });
 
     const conversations = await getAllDatasetConversations(projectId, filters);
-    if (conversations.length === 0) {
-      return NextResponse.json([]);
-    }
-
-    const shareGptData = [];
+    const exported = [];
 
     for (const conversation of conversations) {
       try {
@@ -29,24 +27,24 @@ export async function GET(request, { params }) {
           continue;
         }
 
-        shareGptData.push({
-          messages: messages.map(message => normalizeExportMessage(message, projectId, conversation))
+        const normalizedMessages = messages
+          .map(message => normalizeExportMessage(message, projectId, conversation))
+          .filter(message => includeSystem || message.role !== 'system');
+
+        exported.push({
+          id: conversation.id,
+          imageName: conversation.imageName,
+          messages: normalizedMessages
         });
       } catch (error) {
-        console.error(`Failed to parse conversation messages ${conversation.id}:`, error);
+        console.error(`Failed to parse image conversation ${conversation.id}:`, error);
       }
     }
 
-    return NextResponse.json(shareGptData);
+    return NextResponse.json(exported);
   } catch (error) {
-    console.error('Failed to export multi-turn conversations:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: error.message
-      },
-      { status: 500 }
-    );
+    console.error('Failed to export image conversations:', error);
+    return NextResponse.json({ error: error.message || 'Failed to export image conversations' }, { status: 500 });
   }
 }
 
@@ -81,3 +79,4 @@ function normalizeExportMessage(message, projectId, conversation) {
     })
   };
 }
+

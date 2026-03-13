@@ -3,6 +3,7 @@
 import { Container, Typography, Box, Card, useTheme, alpha } from '@mui/material';
 import { Chat as ChatIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'next/navigation';
 
 // 导入拆分后的组件
 import SearchBar from './components/SearchBar';
@@ -10,10 +11,10 @@ import ConversationTable from './components/ConversationTable';
 import FilterDialog from './components/FilterDialog';
 import { useMultiTurnData } from './hooks/useMultiTurnData';
 
-export default function MultiTurnDatasetPage({ params }) {
+export default function MultiTurnDatasetPage() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { projectId } = params;
+  const { projectId } = useParams();
 
   // 使用自定义Hook管理状态和逻辑
   const {

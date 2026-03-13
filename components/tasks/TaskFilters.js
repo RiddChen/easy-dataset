@@ -28,7 +28,9 @@ export default function TaskFilters({ statusFilter, setStatusFilter, typeFilter,
     'data-distillation',
     'eval-generation',
     'multi-turn-generation',
-    'image-question-generation'
+    'image-question-generation',
+    'image-dataset-generation',
+    'image-multi-turn-generation'
   ];
 
   return (

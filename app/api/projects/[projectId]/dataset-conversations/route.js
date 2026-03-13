@@ -1,26 +1,18 @@
 /**
- * 多轮对话数据集管理API
+ * Multi-turn conversation dataset APIs.
  */
 
 import { NextResponse } from 'next/server';
-import {
-  getDatasetConversationsByPagination,
-  getAllDatasetConversationIds,
-  createDatasetConversation
-} from '@/lib/db/dataset-conversations';
-import { generateMultiTurnConversation } from '@/lib/services/multi-turn/index';
+import { getImageByName } from '@/lib/db/images';
+import { getAllDatasetConversationIds, getDatasetConversationsByPagination } from '@/lib/db/dataset-conversations';
+import { ensureImageQuestion, generateMultiTurnConversation } from '@/lib/services/multi-turn/index';
 
-/**
- * 获取多轮对话数据集列表（支持分页和筛选）
- */
 export async function GET(request, { params }) {
   try {
     const { projectId } = params;
     const { searchParams } = new URL(request.url);
+    const getAllIds = searchParams.get('getAllIds') === 'true';
 
-    const getAllIds = searchParams.get('getAllIds') === 'true'; // 新增：获取所有对话ID的标志
-
-    // 筛选条件
     const filters = {
       keyword: searchParams.get('keyword'),
       roleA: searchParams.get('roleA'),
@@ -31,21 +23,19 @@ export async function GET(request, { params }) {
       confirmed: searchParams.get('confirmed')
     };
 
-    // 清除空值
     Object.keys(filters).forEach(key => {
-      if (!filters[key]) delete filters[key];
+      if (!filters[key]) {
+        delete filters[key];
+      }
     });
 
-    // 如果请求获取所有ID
     if (getAllIds) {
       const allConversationIds = await getAllDatasetConversationIds(projectId, filters);
       return NextResponse.json({ allConversationIds });
     }
 
-    // 正常分页查询
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
-
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(searchParams.get('pageSize') || '20', 10);
     const result = await getDatasetConversationsByPagination(projectId, page, pageSize, filters);
 
     return NextResponse.json({
@@ -53,7 +43,7 @@ export async function GET(request, { params }) {
       ...result
     });
   } catch (error) {
-    console.error('获取多轮对话数据集失败:', error);
+    console.error('Failed to get multi-turn conversations:', error);
     return NextResponse.json(
       {
         success: false,
@@ -64,49 +54,74 @@ export async function GET(request, { params }) {
   }
 }
 
-/**
- * 创建多轮对话数据集
- */
 export async function POST(request, { params }) {
   try {
     const { projectId } = params;
     const body = await request.json();
-
-    const { questionId, systemPrompt, scenario, rounds, roleA, roleB, model, language = '中文' } = body;
-
-    if (!questionId) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: '问题ID不能为空'
-        },
-        { status: 400 }
-      );
-    }
+    const {
+      questionId: inputQuestionId,
+      imageName,
+      question,
+      followUpQuestion,
+      autoGenerateFollowUp,
+      systemPrompt,
+      scenario,
+      rounds,
+      roleA,
+      roleB,
+      model,
+      language = 'zh-CN'
+    } = body;
 
     if (!model || !model.modelId) {
       return NextResponse.json(
         {
           success: false,
-          message: '模型配置不能为空'
+          message: 'Model config is required'
         },
         { status: 400 }
       );
     }
 
-    // 构建配置
-    const config = {
+    let questionId = inputQuestionId;
+
+    if (!questionId && imageName && question) {
+      const image = await getImageByName(projectId, imageName);
+      if (!image) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Image not found'
+          },
+          { status: 404 }
+        );
+      }
+
+      const createdQuestion = await ensureImageQuestion(projectId, image.id, String(question).trim());
+      questionId = createdQuestion.id;
+    }
+
+    if (!questionId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'questionId is required'
+        },
+        { status: 400 }
+      );
+    }
+
+    const result = await generateMultiTurnConversation(projectId, questionId, {
       systemPrompt: systemPrompt || '',
       scenario: scenario || '',
       rounds: rounds || 3,
-      roleA: roleA || '用户',
-      roleB: roleB || '助手',
+      roleA: roleA || 'User',
+      roleB: roleB || 'Assistant',
       model,
-      language
-    };
-
-    // 生成多轮对话
-    const result = await generateMultiTurnConversation(projectId, questionId, config);
+      language,
+      followUpQuestion: followUpQuestion || '',
+      autoGenerateFollowUp: Boolean(autoGenerateFollowUp)
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -123,7 +138,7 @@ export async function POST(request, { params }) {
       data: result.data
     });
   } catch (error) {
-    console.error('创建多轮对话数据集失败:', error);
+    console.error('Failed to create multi-turn conversation:', error);
     return NextResponse.json(
       {
         success: false,

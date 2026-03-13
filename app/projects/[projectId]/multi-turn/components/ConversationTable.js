@@ -209,6 +209,15 @@ const ConversationTable = ({
                     ) : (
                       questionContent
                     )}
+                    {conversation.sourceType === 'image' && conversation.imageName && (
+                      <Chip
+                        label={`image: ${conversation.imageName}`}
+                        size="small"
+                        color="warning"
+                        variant="outlined"
+                        sx={{ mt: 0.5, mr: 0.5, fontSize: '0.7rem' }}
+                      />
+                    )}
                     {conversation.confirmed && (
                       <Chip
                         label={t('datasets.confirmed')}

@@ -18,7 +18,9 @@ import {
   InputLabel,
   MenuItem,
   Chip,
-  FormHelperText
+  FormHelperText,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
@@ -452,7 +454,51 @@ export default function TaskSettings({ projectId }) {
                   sx={{ mb: 2 }}
                 />
 
-                {/* 对话场景 */}
+                <TextField
+                  fullWidth
+                  label={t('settings.imageMultiTurnFirstQuestion', { defaultValue: 'Image multi-turn first prompt' })}
+                  name="imageMultiTurnFirstQuestion"
+                  value={taskSettings.imageMultiTurnFirstQuestion || ''}
+                  onChange={handleSettingChange}
+                  multiline
+                  rows={3}
+                  helperText={t('settings.imageMultiTurnFirstQuestionHelper', {
+                    defaultValue: 'Shared first user prompt used for batch image multi-turn generation'
+                  })}
+                  sx={{ mb: 2 }}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={taskSettings.imageMultiTurnAutoFollowUp !== false}
+                      onChange={e =>
+                        setTaskSettings(prev => ({
+                          ...prev,
+                          imageMultiTurnAutoFollowUp: e.target.checked
+                        }))
+                      }
+                    />
+                  }
+                  label={t('settings.imageMultiTurnAutoFollowUp', { defaultValue: 'Auto generate second-turn follow-up' })}
+                  sx={{ mb: 1 }}
+                />
+
+                <TextField
+                  fullWidth
+                  label={t('settings.imageMultiTurnFollowUpQuestion', { defaultValue: 'Image multi-turn second-turn follow-up' })}
+                  name="imageMultiTurnFollowUpQuestion"
+                  value={taskSettings.imageMultiTurnFollowUpQuestion || ''}
+                  onChange={handleSettingChange}
+                  multiline
+                  rows={3}
+                  disabled={taskSettings.imageMultiTurnAutoFollowUp !== false}
+                  helperText={t('settings.imageMultiTurnFollowUpQuestionHelper', {
+                    defaultValue: 'Used only when automatic follow-up generation is disabled'
+                  })}
+                  sx={{ mb: 2 }}
+                />
+{/* 对话场景 */}
                 <TextField
                   fullWidth
                   label={t('settings.multiTurnScenario')}

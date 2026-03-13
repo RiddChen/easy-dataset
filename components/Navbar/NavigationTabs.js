@@ -35,7 +35,12 @@ export default function NavigationTabs({
     if (pathname.includes('/eval-datasets') || pathname.includes('/eval-tasks')) {
       return 'eval';
     }
-    if (pathname.includes('/datasets') || pathname.includes('/multi-turn') || pathname.includes('/image-datasets')) {
+    if (
+      pathname.includes('/datasets') ||
+      pathname.includes('/multi-turn') ||
+      pathname.includes('/image-datasets') ||
+      pathname.includes('/image-conversations')
+    ) {
       return 'datasets';
     }
     if (pathname.includes('/text-split') || pathname.includes('/images')) {

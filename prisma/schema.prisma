@@ -116,15 +116,19 @@ model Datasets {
   answerType    String?  @default("text") // 'text' | 'label' | 'custom_format'
   chunkName     String
   chunkContent  String
+  sourceType    String   @default("text")
+  imageId       String?
+  imageName     String?
+  systemPrompt  String   @default("")
   model         String
   questionLabel String
   cot           String
   confirmed     Boolean  @default(false)
   score         Float    @default(0)
-  aiEvaluation  String   @default("") // AI评估结论
+  aiEvaluation  String   @default("") // AI璇勪及缁撹
   tags          String   @default("")
   note          String   @default("")
-  other         String   @default("") // 存储其他字段的JSON字符串
+  other         String   @default("") // 瀛樺偍鍏朵粬瀛楁鐨凧SON瀛楃涓?
   createAt      DateTime @default(now())
   updateAt      DateTime @updatedAt
 
@@ -137,21 +141,25 @@ model DatasetConversations {
   id            String   @id @default(nanoid())
   project       Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId     String
-  questionId    String // 第一个问题 Id（初始问题）
-  question      String // 第一个问题（初始问题）
-  chunkId       String // 基于哪个文本块生成
+  questionId    String // 绗竴涓棶棰?Id锛堝垵濮嬮棶棰橈級
+  question      String // 绗竴涓棶棰橈紙鍒濆闂锛?
+  chunkId       String // 鍩轰簬鍝釜鏂囨湰鍧楃敓鎴?
+  sourceType    String   @default("text")
+  imageId       String?
+  imageName     String?
+  systemPrompt  String   @default("")
   model         String
   questionLabel String
   score         Float    @default(0)
-  aiEvaluation  String   @default("") // AI评估结论
+  aiEvaluation  String   @default("") // AI璇勪及缁撹
   tags          String   @default("")
   note          String   @default("")
-  scenario      String // 对话场景（教学/咨询/讨论等）
-  roleA         String // 角色A设定
-  roleB         String // 角色B设定  
-  turnCount     Int // 实际轮数
-  maxTurns      Int // 设置的最大轮数
-  rawMessages   String // JSON存储完整对话（和 ShareGPT 格式保持完全一致）
+  scenario      String // 瀵硅瘽鍦烘櫙锛堟暀瀛?鍜ㄨ/璁ㄨ绛夛級
+  roleA         String // 瑙掕壊A璁惧畾
+  roleB         String // 瑙掕壊B璁惧畾  
+  turnCount     Int // 瀹為檯杞暟
+  maxTurns      Int // 璁剧疆鐨勬渶澶ц疆鏁?
+  rawMessages   String // JSON瀛樺偍瀹屾暣瀵硅瘽锛堝拰 ShareGPT 鏍煎紡淇濇寔瀹屽叏涓€鑷达級
   confirmed     Boolean  @default(false)
   createAt      DateTime @default(now())
   updateAt      DateTime @updatedAt
@@ -202,16 +210,16 @@ model Task {
   id             String    @id @default(nanoid())
   project        Projects  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId      String
-  taskType       String // 任务类型: text-processing, question-generation, answer-generation, data-distillation
-  status         Int // 任务状态: 0-处理中, 1-已完成, 2-失败, 3-已中断
+  taskType       String // 浠诲姟绫诲瀷: text-processing, question-generation, answer-generation, data-distillation
+  status         Int // 浠诲姟鐘舵€? 0-澶勭悊涓? 1-宸插畬鎴? 2-澶辫触, 3-宸蹭腑鏂?
   startTime      DateTime  @default(now())
   endTime        DateTime?
   completedCount Int       @default(0)
   totalCount     Int       @default(0)
-  modelInfo      String // JSON格式存储，包含使用的模型信息
+  modelInfo      String // JSON鏍煎紡瀛樺偍锛屽寘鍚娇鐢ㄧ殑妯″瀷淇℃伅
   language       String    @default("zh-CN")
-  detail         String    @default("") // 任务详情
-  note           String    @default("") // 任务备注
+  detail         String    @default("") // 浠诲姟璇︽儏
+  note           String    @default("") // 浠诲姟澶囨敞
   createAt       DateTime  @default(now())
   updateAt       DateTime  @updatedAt
 
@@ -222,11 +230,11 @@ model CustomPrompts {
   id         String   @id @default(nanoid())
   project    Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId  String
-  promptType String // 提示词类型，对应 lib/llm/prompts 下的文件名
-  promptKey  String // 提示词在模块中的键名，如 QUESTION_PROMPT, QUESTION_PROMPT_EN
-  language   String // 语言: zh-CN, en
-  content    String // 自定义的提示词内容
-  isActive   Boolean  @default(true) // 是否启用
+  promptType String // 鎻愮ず璇嶇被鍨嬶紝瀵瑰簲 lib/llm/prompts 涓嬬殑鏂囦欢鍚?
+  promptKey  String // 鎻愮ず璇嶅湪妯″潡涓殑閿悕锛屽 QUESTION_PROMPT, QUESTION_PROMPT_EN
+  language   String // 璇█: zh-CN, en
+  content    String // 鑷畾涔夌殑鎻愮ず璇嶅唴瀹?
+  isActive   Boolean  @default(true) // 鏄惁鍚敤
   createAt   DateTime @default(now())
   updateAt   DateTime @updatedAt
 
@@ -261,10 +269,10 @@ model Images {
   project       Projects        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId     String
   imageName     String
-  path          String // 图片存储路径
-  size          Int // 文件大小（字节）
-  width         Int? // 图片宽度
-  height        Int? // 图片高度
+  path          String // 鍥剧墖瀛樺偍璺緞
+  size          Int // 鏂囦欢澶у皬锛堝瓧鑺傦級
+  width         Int? // 鍥剧墖瀹藉害
+  height        Int? // 鍥剧墖楂樺害
   createAt      DateTime        @default(now())
   updateAt      DateTime        @updatedAt
   ImageDatasets ImageDatasets[]
@@ -318,22 +326,22 @@ model QuestionTemplates {
 model LlmUsageLogs {
   id        String @id @default(nanoid())
   projectId String
-  provider  String // 提供商: openai, anthropic, google 等
-  model     String // 模型名称
+  provider  String // 鎻愪緵鍟? openai, anthropic, google 绛?
+  model     String // 妯″瀷鍚嶇О
 
-  // 核心指标
+  // 鏍稿績鎸囨爣
   inputTokens  Int @default(0)
   outputTokens Int @default(0)
   totalTokens  Int @default(0)
-  latency      Int @default(0) // 响应耗时（毫秒）
+  latency      Int @default(0) // 鍝嶅簲鑰楁椂锛堟绉掞級
 
-  // 状态与追踪
-  status       String  @default("SUCCESS") // 状态: "SUCCESS", "FAILED"
-  errorMessage String? // 失败原因，status="FAILED" 时填写
+  // 鐘舵€佷笌杩借釜
+  status       String  @default("SUCCESS") // 鐘舵€? "SUCCESS", "FAILED"
+  errorMessage String? // 澶辫触鍘熷洜锛宻tatus="FAILED" 鏃跺～鍐?
 
-  // 时间维度
+  // 鏃堕棿缁村害
   createAt   DateTime @default(now())
-  dateString String // 格式 "YYYY-MM-DD"，用于快速按天聚合
+  dateString String // 鏍煎紡 "YYYY-MM-DD"锛岀敤浜庡揩閫熸寜澶╄仛鍚?
 
   @@index([projectId, dateString])
   @@index([dateString])
@@ -346,28 +354,28 @@ model EvalDatasets {
   project   Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
 
-  // 题目内容
-  question     String // 题目内容
-  questionType String // 题型: true_false, single_choice, multiple_choice, short_answer, open_ended
+  // 棰樼洰鍐呭
+  question     String // 棰樼洰鍐呭
+  questionType String // 棰樺瀷: true_false, single_choice, multiple_choice, short_answer, open_ended
 
-  // 上下文信息（关联到文本块）
-  chunkId String? // 关联到 Chunks 表
+  // 涓婁笅鏂囦俊鎭紙鍏宠仈鍒版枃鏈潡锛?
+  chunkId String? // 鍏宠仈鍒?Chunks 琛?
   chunks  Chunks? @relation(fields: [chunkId], references: [id])
 
-  // 选项（仅选择题使用）
-  options String @default("") // JSON数组: ["选项A", "选项B", "选项C", "选项D"]
+  // 閫夐」锛堜粎閫夋嫨棰樹娇鐢級
+  options String @default("") // JSON鏁扮粍: ["閫夐」A", "閫夐」B", "閫夐」C", "閫夐」D"]
 
-  // 标准答案
-  correctAnswer String // 标准答案
+  // 鏍囧噯绛旀
+  correctAnswer String // 鏍囧噯绛旀
 
-  tags String @default("") // 标签，逗号分隔
-  note String @default("") // 备注
+  tags String @default("") // 鏍囩锛岄€楀彿鍒嗛殧
+  note String @default("") // 澶囨敞
 
-  // 时间戳
+  // 鏃堕棿鎴?
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  // 关联评估结果
+  // 鍏宠仈璇勪及缁撴灉
   EvalResults EvalResults[]
 
   @@index([projectId])
@@ -378,29 +386,30 @@ model EvalDatasets {
 model EvalResults {
   id        String @id @default(nanoid())
   projectId String
-  taskId    String // 关联到 Task 表
+  taskId    String // 鍏宠仈鍒?Task 琛?
 
-  // 关联评估题目
+  // 鍏宠仈璇勪及棰樼洰
   evalDataset   EvalDatasets @relation(fields: [evalDatasetId], references: [id], onDelete: Cascade)
   evalDatasetId String
 
-  // 评估结果
-  modelAnswer   String // 模型的回答
-  score         Float   @default(0) // 得分 (0-1 之间)
-  isCorrect     Boolean @default(false) // 是否正确（用于客观题）
-  judgeResponse String  @default("") // LLM 评分的响应（用于主观题）
+  // 璇勪及缁撴灉
+  modelAnswer   String // 妯″瀷鐨勫洖绛?
+  score         Float   @default(0) // 寰楀垎 (0-1 涔嬮棿)
+  isCorrect     Boolean @default(false) // 鏄惁姝ｇ‘锛堢敤浜庡瑙傞锛?
+  judgeResponse String  @default("") // LLM 璇勫垎鐨勫搷搴旓紙鐢ㄤ簬涓昏棰橈級
 
-  // 答题详情
-  duration     Int    @default(0) // 答题耗时（毫秒）
-  status       Int    @default(0) // 答题状态：0-成功, 1-输出不符合规范, 2-LLM调用报错
-  errorMessage String @default("") // 答题报错信息
+  // 绛旈璇︽儏
+  duration     Int    @default(0) // 绛旈鑰楁椂锛堟绉掞級
+  status       Int    @default(0) // 绛旈鐘舵€侊細0-鎴愬姛, 1-杈撳嚭涓嶇鍚堣鑼? 2-LLM璋冪敤鎶ラ敊
+  errorMessage String @default("") // 绛旈鎶ラ敊淇℃伅
 
-  // 时间戳
+  // 鏃堕棿鎴?
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
 
-  @@unique([taskId, evalDatasetId]) // 每个任务对每道题只能有一个结果
+  @@unique([taskId, evalDatasetId]) // 姣忎釜浠诲姟瀵规瘡閬撻鍙兘鏈変竴涓粨鏋?
   @@index([projectId])
   @@index([taskId])
   @@index([evalDatasetId])
 }
+

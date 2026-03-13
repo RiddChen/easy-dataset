@@ -5,12 +5,39 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
+function updateMessageText(content, newText) {
+  if (typeof content === 'string') {
+    return newText;
+  }
+
+  if (Array.isArray(content)) {
+    let hasText = false;
+    const nextContent = content.map(item => {
+      if (item?.type !== 'text') {
+        return item;
+      }
+      hasText = true;
+      return { ...item, text: newText };
+    });
+
+    if (!hasText) {
+      nextContent.unshift({ type: 'text', text: newText });
+    }
+
+    return nextContent;
+  }
+
+  return newText;
+}
+
 /**
  * 多轮对话详情页面的状态管理Hook
  */
-export default function useConversationDetails(projectId, conversationId) {
+export default function useConversationDetails(projectId, conversationId, options = {}) {
   const { t } = useTranslation();
   const router = useRouter();
+  const apiBasePath = options.apiBasePath || `/api/projects/${projectId}/dataset-conversations`;
+  const pageBasePath = options.pageBasePath || `/projects/${projectId}/multi-turn`;
 
   // 基础状态
   const [conversation, setConversation] = useState(null);
@@ -35,12 +62,12 @@ export default function useConversationDetails(projectId, conversationId) {
   const fetchConversation = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/projects/${projectId}/dataset-conversations/${conversationId}`);
+      const response = await fetch(`${apiBasePath}/${conversationId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
           toast.error(t('datasets.conversationNotFound'));
-          router.push(`/projects/${projectId}/multi-turn`);
+          router.push(pageBasePath);
           return;
         }
         throw new Error(t('datasets.fetchDataFailed'));
@@ -79,7 +106,7 @@ export default function useConversationDetails(projectId, conversationId) {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await fetch(`/api/projects/${projectId}/dataset-conversations/${conversationId}`, {
+      const response = await fetch(`${apiBasePath}/${conversationId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -131,7 +158,7 @@ export default function useConversationDetails(projectId, conversationId) {
   // 删除对话
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/dataset-conversations/${conversationId}`, {
+      const response = await fetch(`${apiBasePath}/${conversationId}`, {
         method: 'DELETE'
       });
 
@@ -140,7 +167,7 @@ export default function useConversationDetails(projectId, conversationId) {
       }
 
       toast.success(t('datasets.deleteSuccess'));
-      router.push(`/projects/${projectId}/multi-turn`);
+      router.push(pageBasePath);
     } catch (error) {
       console.error('删除失败:', error);
       toast.error(error.message || t('datasets.deleteFailed'));
@@ -150,7 +177,10 @@ export default function useConversationDetails(projectId, conversationId) {
   // 更新消息内容
   const updateMessageContent = (index, newContent) => {
     const updatedMessages = [...editData.messages];
-    updatedMessages[index] = { ...updatedMessages[index], content: newContent };
+    updatedMessages[index] = {
+      ...updatedMessages[index],
+      content: updateMessageText(updatedMessages[index].content, newContent)
+    };
     setEditData({ ...editData, messages: updatedMessages });
   };
 
@@ -158,7 +188,7 @@ export default function useConversationDetails(projectId, conversationId) {
   const handleNavigate = async direction => {
     try {
       const response = await fetch(
-        `/api/projects/${projectId}/dataset-conversations/${conversationId}?operateType=${direction}`
+        `${apiBasePath}/${conversationId}?operateType=${direction}`
       );
 
       if (!response.ok) {
@@ -168,7 +198,7 @@ export default function useConversationDetails(projectId, conversationId) {
       const data = await response.json();
 
       if (data) {
-        router.push(`/projects/${projectId}/multi-turn/${data.id}`);
+        router.push(`${pageBasePath}/${data.id}`);
       } else {
         toast.warning(`已经是${direction === 'next' ? '最后' : '第'}一条对话了`);
       }

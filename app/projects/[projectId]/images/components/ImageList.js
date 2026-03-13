@@ -18,11 +18,11 @@ import {
   Dialog,
   DialogContent,
   Typography,
-  Button,
   Checkbox
 } from '@mui/material';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import DatasetIcon from '@mui/icons-material/Dataset';
+import ForumIcon from '@mui/icons-material/Forum';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
@@ -38,6 +38,7 @@ export default function ImageList({
   onPageChange,
   onGenerateQuestions,
   onGenerateDataset,
+  onGenerateMultiTurn,
   onDelete,
   onAnnotate,
   selectedIds = [],
@@ -46,30 +47,30 @@ export default function ImageList({
   const { t } = useTranslation();
   const [previewImage, setPreviewImage] = useState(null);
 
-  // 处理全选/取消全选
   const handleSelectAll = event => {
+    const currentPageIds = images.map(image => image.id);
+
     if (event.target.checked) {
-      const allIds = images.map(img => img.id);
-      onSelectionChange?.(allIds);
-    } else {
-      onSelectionChange?.([]);
+      onSelectionChange?.(Array.from(new Set([...selectedIds, ...currentPageIds])));
+      return;
     }
+
+    onSelectionChange?.(selectedIds.filter(id => !currentPageIds.includes(id)));
   };
 
-  // 处理单个选择
   const handleSelectOne = (imageId, checked) => {
     if (checked) {
       onSelectionChange?.([...selectedIds, imageId]);
-    } else {
-      onSelectionChange?.(selectedIds.filter(id => id !== imageId));
+      return;
     }
+    onSelectionChange?.(selectedIds.filter(id => id !== imageId));
   };
 
-  // 判断是否全选
-  const isAllSelected = images.length > 0 && selectedIds.length === images.length;
-  const isSomeSelected = selectedIds.length > 0 && selectedIds.length < images.length;
+  const currentPageIds = images.map(image => image.id);
+  const selectedOnCurrentPage = currentPageIds.filter(id => selectedIds.includes(id)).length;
+  const isAllSelected = images.length > 0 && selectedOnCurrentPage === images.length;
+  const isSomeSelected = selectedOnCurrentPage > 0 && selectedOnCurrentPage < images.length;
 
-  // 格式化日期
   const formatDate = dateString => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -82,7 +83,6 @@ export default function ImageList({
     });
   };
 
-  // 格式化文件大小
   const formatSize = bytes => {
     if (!bytes) return '-';
     if (bytes < 1024) return `${bytes} B`;
@@ -100,7 +100,7 @@ export default function ImageList({
           {t('images.noImages', { defaultValue: '还没有图片' })}
         </Typography>
         <Typography variant="body2" sx={imageStyles.emptyDescription}>
-          {t('images.noImagesDescription', { defaultValue: '开始导入图片，创建您的第一个图片数据集' })}
+          {t('images.noImagesDescription', { defaultValue: '开始导入图片，创建你的第一个图片数据集' })}
         </Typography>
       </Box>
     );
@@ -122,7 +122,7 @@ export default function ImageList({
               <TableCell width="100">{t('images.questionCount', { defaultValue: '问题数' })}</TableCell>
               <TableCell width="100">{t('images.datasetCount', { defaultValue: '数据集数' })}</TableCell>
               <TableCell width="180">{t('images.uploadTime', { defaultValue: '上传时间' })}</TableCell>
-              <TableCell width="200" align="center">
+              <TableCell width="220" align="center">
                 {t('common.actions', { defaultValue: '操作' })}
               </TableCell>
             </TableRow>
@@ -139,33 +139,21 @@ export default function ImageList({
                   }
                 }}
               >
-                {/* 复选框 */}
                 <TableCell padding="checkbox">
                   <Checkbox
                     checked={selectedIds.includes(image.id)}
-                    onChange={e => handleSelectOne(image.id, e.target.checked)}
+                    onChange={event => handleSelectOne(image.id, event.target.checked)}
                   />
                 </TableCell>
-
-                {/* 预览缩略图 */}
                 <TableCell>
                   <Avatar
                     src={image.base64 || image.path}
                     alt={image.imageName}
                     variant="rounded"
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      cursor: 'pointer',
-                      '&:hover': {
-                        opacity: 0.8
-                      }
-                    }}
+                    sx={{ width: 48, height: 48, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
                     onClick={() => setPreviewImage(image)}
                   />
                 </TableCell>
-
-                {/* 文件名 */}
                 <TableCell>
                   <Tooltip title={image.imageName}>
                     <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
@@ -173,19 +161,15 @@ export default function ImageList({
                     </Typography>
                   </Tooltip>
                 </TableCell>
-
-                {/* 文件大小 */}
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">
                     {formatSize(image.size)}
                   </Typography>
                 </TableCell>
-
-                {/* 尺寸 */}
                 <TableCell>
                   {image.width && image.height ? (
                     <Typography variant="body2" color="text.secondary">
-                      {image.width} × {image.height}
+                      {image.width} x {image.height}
                     </Typography>
                   ) : (
                     <Typography variant="body2" color="text.disabled">
@@ -193,8 +177,6 @@ export default function ImageList({
                     </Typography>
                   )}
                 </TableCell>
-
-                {/* 问题数 */}
                 <TableCell>
                   <Chip
                     label={image.questionCount || 0}
@@ -203,8 +185,6 @@ export default function ImageList({
                     variant="outlined"
                   />
                 </TableCell>
-
-                {/* 数据集数 */}
                 <TableCell>
                   <Chip
                     label={image.datasetCount || 0}
@@ -213,15 +193,11 @@ export default function ImageList({
                     variant="outlined"
                   />
                 </TableCell>
-
-                {/* 上传时间 */}
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">
                     {formatDate(image.createAt)}
                   </Typography>
                 </TableCell>
-
-                {/* 操作按钮 */}
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
                     <Tooltip title={t('images.preview', { defaultValue: '预览' })}>
@@ -244,6 +220,11 @@ export default function ImageList({
                         <DatasetIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
+                    <Tooltip title="生成 2 轮对话">
+                      <IconButton size="small" onClick={() => onGenerateMultiTurn(image)}>
+                        <ForumIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title={t('common.delete', { defaultValue: '删除' })}>
                       <IconButton size="small" color="error" onClick={() => onDelete(image.id)}>
                         <DeleteIcon fontSize="small" />
@@ -257,7 +238,6 @@ export default function ImageList({
         </Table>
       </TableContainer>
 
-      {/* 分页 */}
       {total > pageSize && (
         <Box sx={imageStyles.pagination}>
           <Pagination
@@ -272,7 +252,6 @@ export default function ImageList({
         </Box>
       )}
 
-      {/* 图片预览对话框 */}
       <Dialog
         open={!!previewImage}
         onClose={() => setPreviewImage(null)}

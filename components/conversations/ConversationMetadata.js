@@ -21,6 +21,17 @@ export default function ConversationMetadata({ conversation }) {
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         <Chip label={`${t('datasets.modelUsed')}: ${conversation.model}`} variant="outlined" size="small" />
 
+        {conversation.sourceType && (
+          <Chip
+            label={`Source: ${conversation.sourceType}`}
+            variant="outlined"
+            size="small"
+            color={conversation.sourceType === 'image' ? 'warning' : 'default'}
+          />
+        )}
+
+        {conversation.imageName && <Chip label={`Image: ${conversation.imageName}`} variant="outlined" size="small" />}
+
         {conversation.scenario && (
           <Chip
             label={`${t('datasets.conversationScenario')}: ${conversation.scenario}`}

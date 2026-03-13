@@ -16,6 +16,7 @@ export default function ConversationHeader({
   projectId,
   conversationId,
   conversation,
+  backHref,
   editMode,
   saving,
   onEdit,
@@ -31,7 +32,7 @@ export default function ConversationHeader({
     <Paper sx={{ p: 2, mb: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button startIcon={<NavigateBeforeIcon />} onClick={() => router.push(`/projects/${projectId}/multi-turn`)}>
+          <Button startIcon={<NavigateBeforeIcon />} onClick={() => router.push(backHref || `/projects/${projectId}/multi-turn`)}>
             {t('common.backToList')}
           </Button>
           <Divider orientation="vertical" flexItem />
